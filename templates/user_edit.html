@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+    <title>user edit</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="p-3 m-0 border-0 bd-example m-0 border-0">
+
+<form>
+    <div class="mb-3">
+        <div id="emailHelp" class="form-text">User editing menu under the Id {{ user.id }}</div>
+        <label class="form-label">Email address</label>
+        <input type="text" class="form-control" id="emailInput" aria-describedby="emailHelp" value="{{ user.username }}">
+    </div>
+    <div class="mb-3">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                    Groups
+                </button>
+                <div class="dropdown-menu">
+                    {% for group in groups %}
+                    <a class="dropdown-item" data-id="{{ group.id }}" data-value="{{ group.name }}">{{ group.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <input type="text" class="form-control" aria-label="Text input with dropdown button" id="groupSelection" value="{{ user.group }}"
+                   disabled>
+        </div>
+    </div>
+    <div class="mb-3 form-check">
+        <label class="form-label">Administrator access</label>
+        <input class="form-check-input" type="checkbox" value="" id="flexCheck{{ user.id }}" {% if user.is_admin %}checked{% endif %}>
+        <label class="form-check-label" for="flexCheck{{ user.id }}"></label>
+    </div>
+    <button type="button" class="btn" id="Submit">Submit</button>
+    <button type="button" class="btn">
+        <a href="/">return to the list of users</a>
+    </button>
+
+</form>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+<script>
+    const groupItems = document.querySelectorAll('.dropdown-item');
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+
+    groupItems.forEach(function (item) {
+        item.addEventListener('click', function (event) {
+            const selectedValue = event.target.getAttribute('data-value');
+            const groupSelection = document.getElementById('groupSelection');
+            groupSelection.value = selectedValue;
+        });
+    });
+
+    // save Email button
+    $(document).ready(function () {
+        const saveButton = $("#Submit");
+
+        saveButton.on("click", function () {
+            // Отримати значення з полів вводу
+            const userSelectionName = $("#emailInput").val();
+            const userId = "{{ user.id }}";
+            const isCheckboxChecked = $("#flexCheck{{ user.id }}").prop("checked");
+            const groupSelectionName = $("#groupSelection").val();
+            const selectedOption = document.querySelector(".dropdown-item[data-value='" + groupSelectionName + "']");
+            const groupId = selectedOption.getAttribute("data-id");
+
+
+            // Виконати AJAX-запит для оновлення даних користувача
+            const data = {
+                username: userSelectionName,
+                is_admin: isCheckboxChecked,
+                group: groupId
+            };
+
+            // Виконати PUT-запит для оновлення даних користувача
+            $.ajax({
+                type: "PUT",
+                url: `/api/users/${userId}/`,
+                data: JSON.stringify(data),
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+                success: function (data, textStatus, jqXHR) {
+                    if (textStatus === 'success') {
+                        alert("Дані користувача успішно оновлено:" + textStatus)
+                    } else {
+                        alert(textStatus)
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (textStatus === 'error') {
+                        alert(textStatus)
+                    } else {
+                        alert(textStatus)
+                    }
+                },
+            });
+        });
+    });
+
+</script>
+
+</body>
+</html>
